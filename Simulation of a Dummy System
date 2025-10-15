@@ -1,0 +1,64 @@
+# Simulate a triple star system light curve and save data in a CSV file
+import numpy as np
+
+# Set random seed for reproducible results
+np.random.seed(42)
+
+# Create time array - simulate 2 years of observations with irregular sampling
+n_points = 1000
+t_start, t_end = 0, 730  # days
+t = np.sort(np.random.uniform(t_start, t_end, n_points))
+
+# System parameters for a hierarchical triple
+# Inner binary (short period eclipsing binary)
+P1 = 2.5  # days (inner binary period)
+eclipse_depth1_primary = 0.15  # mag
+eclipse_depth1_secondary = 0.08  # mag
+eclipse_width1 = 0.1  # fraction of period
+# Outer orbit (third star)
+P2 = 127.3  # days (outer period)
+eclipse_depth2 = 0.25  # mag (when third star eclipses the binary)
+eclipse_width2 = 0.05  # fraction of period
+
+# Additional effects
+P3 = 45.2  # days (possible additional periodicity - ellipsoidal variation)
+amp3 = 0.03  # mag
+
+# Create the composite light curve
+flux = np.ones_like(t)  # Start with constant flux
+
+# Add inner binary eclipses
+phase1 = (t % P1) / P1
+# Primary eclipses
+primary_mask1 = np.abs(phase1 - 0.0) < eclipse_width1/2
+flux[primary_mask1] *= (1 - eclipse_depth1_primary)
+
+# Secondary eclipses
+secondary_mask1 = np.abs(phase1 - 0.5) < eclipse_width1/2
+flux[secondary_mask1] *= (1 - eclipse_depth1_secondary)
+
+# Add outer eclipses (third star)
+phase2 = (t % P2) / P2
+outer_mask = np.abs(phase2 - 0.3) < eclipse_width2/2  # Eccentric orbit, eclipse not at phase 0
+flux[outer_mask] *= (1 - eclipse_depth2)
+
+# Add ellipsoidal variation or other periodic signal
+flux *= (1 + amp3 * np.sin(2 * np.pi * t / P3))
+
+# Convert to magnitudes and add noise
+mags = -2.5 * np.log10(flux)
+mags += np.random.normal(0, 0.01, len(mags))  # Add photometric noise
+
+print("Simulated Triple Star System Analysis")
+print("=====================================")
+print(f"Inner binary period: {P1:.1f} days")
+print(f"Outer period: {P2:.1f} days") 
+print(f"Additional periodicity: {P3:.1f} days")
+print(f"Number of observations: {len(t)}")
+print(f"Time baseline: {t_end - t_start:.0f} days")
+print()
+
+# Save the simulated data
+data = np.column_stack([t, mags])
+np.savetxt('triple_star_lightcurve.csv', data, header='time_days,magnitude', delimiter=',', fmt='%.6f')
+print("Simulated data saved to 'triple_star_lightcurve.csv'")

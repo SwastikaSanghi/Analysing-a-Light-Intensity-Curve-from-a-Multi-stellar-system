@@ -1,0 +1,7 @@
+from astropy.io import fits     # astropy library is used for astronomical data, the data is mostly found in FITS format
+import pandas as pd             # Used for data manipulation and converting to CSV
+
+hdulist = fits.open('ktwo249432662-c15_llc.fits')   # Opens FITS file and stores result in hdulist (Header-Data Units)
+data = hdulist[1].data                              # Accesses 1st extension HDU & retrieves data table
+df = pd.DataFrame(data)                             # Converts FITS table into Pandas DataFrame
+df.to_csv('EPIC249432662_lightcurve.csv', index=False)  # Saves DataFrame as CSV file without row numbers
